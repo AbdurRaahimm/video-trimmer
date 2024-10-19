@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { loadFFmpeg } from "./lib/utils";
+import Loading from "./components/Loading";
 
 declare global {
   interface Window {
@@ -28,11 +29,11 @@ export default function App() {
     <>
       {
         isLoaded ? (
-          <div>
-            <h1>FFmpeg is loaded</h1>
+          <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-pink-500 to-rose-500">
+            <h1 className="text-4xl font-bold text-white" >Make a video trim with shorts</h1>
           </div>
         ) : (
-          <p>Loading FFmpeg...</p>
+          <Loading  />
         )
       }
     </>
