@@ -22,3 +22,23 @@ export const loadFFmpeg = async (url: string): Promise<HTMLScriptElement> => {
     });
   };
   
+
+  export const convertToHHMMSS = (seconds: number) => {
+    const date = new Date(seconds * 1000);
+    const hh = date.getUTCHours();
+    const mm = date.getUTCMinutes();
+    const ss = date.getUTCSeconds();
+    if (hh) {
+        return `${hh}:${mm.toString().padStart(2, "0")}:${ss
+            .toString()
+            .padStart(2, "0")}`;
+    } else {
+        return `${mm.toString().padStart(2, "0")}:${ss
+            .toString()
+            .padStart(2, "0")}`;
+    }
+  
+    return `${hh}:${mm.toString().padStart(2, "0")}:${ss
+        .toString()
+        .padStart(2, "0")}`;
+}
