@@ -230,7 +230,28 @@ export default function App() {
             </>
           )}
 
-         
+          {/* Show trimmed video section when available */}
+          {trimmedVideoUrl && (
+            <div className="mt-6">
+              <h2 className="text-white font-bold">Trimmed Video:</h2>
+              <video src={trimmedVideoUrl} controls className="size-96" />
+              <div className="flex items-center justify-between mt-8 space-x-4">
+                <button
+                  onClick={() => setTrimmedVideoUrl(null)} // Go back to the trimming UI
+                  className="bg-green-500 text-white px-4 py-2 rounded-md"
+                >
+                  Go back
+                </button>
+                <a
+                  href={trimmedVideoUrl}
+                  download
+                  className="bg-green-500 text-white px-4 py-2 rounded-md mt-2"
+                >
+                  Download
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <Loading />
