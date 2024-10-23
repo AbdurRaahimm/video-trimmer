@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { Upload, AlertCircle, Play, Pause } from "lucide-react";
-import * as SliderPrimitive from "@radix-ui/react-slider";
-import { loadFFmpeg, convertToHHMMSS } from "./lib/utils";
+import { AlertCircle } from "lucide-react";
+import { loadFFmpeg } from "./lib/utils";
 import Loading from "./components/Loading";
+import UploadVideo from "./components/UploadVideo";
+import DisplayVideo from "./components/displayVideo";
+import TrimmedVideo from "./components/TrimmedVideo";
 
 declare global {
   interface Window {
@@ -51,23 +53,6 @@ export default function App() {
     }
   };
 
-  const handlePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying); // Toggle play/pause state
-    }
-  };
-
-  const handleSliderChange = (value: number[]) => {
-    setRange(value); // Update range state with slider value
-    if (videoRef.current) {
-      videoRef.current.currentTime = value[0]; // Sync video start time with the slider
-    }
-  };
 
   // Ensure the metadata is loaded and the duration is set
   useEffect(() => {
@@ -80,43 +65,6 @@ export default function App() {
       };
     }
   }, [video]);
-
-
-  const handleTrimVideo = async () => {
-    if (isLoaded && video && videoRef && videoRef.current) {
-      try {
-        const { name } = video; // Get the video file name and type
-        const outputFileName = "output.mp4"; // Name for the output file
-
-        // Write the input video file to FFmpeg's virtual file system (FS)
-        ffmpeg.FS("writeFile", name, await window.FFmpeg.fetchFile(video));
-
-        // Run the trimming command with FFmpeg
-        await ffmpeg.run(
-          "-i", name,                     // Input file name
-          "-ss", `${convertToHHMMSS(range[0])}`,  // Start time from slider
-          "-to", `${convertToHHMMSS(range[1])}`,  // End time from slider
-          "-acodec", "copy",              // Copy the audio codec
-          "-vcodec", "copy",              // Copy the video codec
-          outputFileName                  // Output file name
-        );
-
-        // Read the trimmed output file from the virtual file system
-        const data = ffmpeg.FS("readFile", outputFileName);
-
-        // Create a Blob from the output file data
-        const blob = new Blob([data.buffer], { type: "video/mp4" });
-        const url = URL.createObjectURL(blob);
-
-        // Set the URL for the trimmed video to display it
-        setTrimmedVideoUrl(url);
-
-        console.log("Video trimming successful!");
-      } catch (error) {
-        console.error("Error trimming video:", error);
-      }
-    }
-  };
 
 
   return (
@@ -140,117 +88,36 @@ export default function App() {
             <>
               {/* Show upload section */}
               {!file && !video && (
-                <div className="mt-2 w-9/12 sm:w-1/2 flex justify-center rounded-lg border border-dashed border-white bg-white/40 mx-3 px-8 py-10">
-                  <div className="text-center">
-                    <Upload aria-hidden="true" className="mx-auto h-12 w-12 text-gray-300" />
-                    <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                      <label
-                        htmlFor="file-upload"
-                        className="relative cursor-pointer rounded-md font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
-                      >
-                        <span>Upload a file</span>
-                        <input
-                          id="file-upload"
-                          name="file-upload"
-                          type="file"
-                          accept="video/*"
-                          className="sr-only"
-                          onChange={handleFileChange}
-                        />
-                      </label>
-                      <p className="pl-1"> or drag and drop</p>
-                    </div>
-                    <p className="text-xs leading-5 text-gray-600">MP4, MOV, AVI up to 100MB</p>
-                  </div>
-                </div>
+                <UploadVideo handleFileChange={handleFileChange} />
               )}
 
               {/* Video is selected section */}
               {video && videoUrl && (
-                <>
-                  <video
-                    ref={videoRef}
-                    src={videoUrl}
-                    className="size-96"
-                    onLoadedMetadata={() => {
-                      if (videoRef.current) {
-                        setVideoDuration(videoRef.current.duration);
-                        setRange([0, videoRef.current.duration]);
-                      }
-                    }}
-                  />
-
-                  <SliderPrimitive.Root
-                    className="relative flex items-center select-none touch-none w-full sm:w-5/12 h-5 "
-                    value={range}
-                    onValueChange={handleSliderChange}
-                    min={0}
-                    max={videoDuration}
-                    step={1}
-                  >
-                    <SliderPrimitive.Track className="bg-gray-700 relative grow rounded-full h-3">
-                      <SliderPrimitive.Range className="absolute bg-green-500 rounded-full h-full" />
-                    </SliderPrimitive.Track>
-                    {range.map((value, index) => (
-                      <SliderPrimitive.Thumb
-                        key={index}
-                        className="block w-5 h-5 bg-white rounded-full focus:outline-none focus-visible:ring focus-visible:ring-green-500 focus-visible:ring-opacity-75"
-                      >
-                        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 text-white text-xs">
-                          {convertToHHMMSS(value)} {/* Display formatted time */}
-                        </div>
-                      </SliderPrimitive.Thumb>
-                    ))}
-                  </SliderPrimitive.Root>
-
-                  <div className="flex items-center mt-8 space-x-4">
-                    <button
-                      onClick={handlePlayPause}
-                      className="bg-white text-black px-4 py-2 rounded-md flex items-center gap-1"
-                    >
-                      {isPlaying ? (
-                        <Pause aria-hidden="true" className="size-4" />
-                      ) : (
-                        <Play aria-hidden="true" className="size-4" />
-                      )}
-                      {isPlaying ? "Pause" : "Play"}
-                    </button>
-                    <p className="text-white font-bold">
-                      ({convertToHHMMSS(range[0])} / {convertToHHMMSS(range[1])})
-                    </p>
-                    <button
-                      onClick={handleTrimVideo}
-                      className="bg-green-500 text-white px-4 py-2 rounded-md"
-                    >
-                      Trim Video
-                    </button>
-                  </div>
-                </>
+                <DisplayVideo
+                  videoUrl={videoUrl}
+                  videoRef={videoRef}
+                  isPlaying={isPlaying}
+                  setIsPlaying={setIsPlaying}
+                  ffmpeg={ffmpeg}
+                  video={video}
+                  range={range}
+                  setRange={setRange}
+                  isLoaded={isLoaded}
+                  videoDuration={videoDuration}
+                  setVideoDuration={setVideoDuration}
+                  setTrimmedVideoUrl={setTrimmedVideoUrl}
+                />
               )}
             </>
           )}
 
           {/* Show trimmed video section when available */}
           {trimmedVideoUrl && (
-            <div className="mt-6">
-              <h2 className="text-white font-bold">Trimmed Video:</h2>
-              <video src={trimmedVideoUrl} controls className="size-96" />
-              <div className="flex items-center justify-between mt-8 space-x-4">
-                <button
-                  onClick={() => setTrimmedVideoUrl(null)} // Go back to the trimming UI
-                  className="bg-green-500 text-white px-4 py-2 rounded-md"
-                >
-                  Go back
-                </button>
-                <a
-                  href={trimmedVideoUrl}
-                  download
-                  className="bg-green-500 text-white px-4 py-2 rounded-md mt-2"
-                >
-                  Download
-                </a>
-              </div>
-            </div>
+            <TrimmedVideo
+              trimmedVideoUrl={trimmedVideoUrl}
+              setTrimmedVideoUrl={setTrimmedVideoUrl}
+              
+            />
           )}
         </div>
       ) : (
