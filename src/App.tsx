@@ -5,6 +5,9 @@ import Loading from "./components/Loading";
 import UploadVideo from "./components/UploadVideo";
 import DisplayVideo from "./components/displayVideo";
 import TrimmedVideo from "./components/TrimmedVideo";
+import { ToastAction } from "@/components/ui/toast"
+import { useToast } from "@/hooks/use-toast";
+import Layout from "@/components/Layout";
 
 declare global {
   interface Window {
@@ -26,6 +29,8 @@ export default function App() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const { toast } = useToast()
+
   useEffect(() => {
     loadFFmpeg("https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.2/dist/ffmpeg.min.js")
       .then(() => {
@@ -36,7 +41,15 @@ export default function App() {
           });
         }
       })
-      .catch((err: Error) => console.error("Error loading ffmpeg:", err));
+      .catch((err: Error) => {
+        setError("Error loading ffmpeg: " + err.message);
+        toast({
+          title: "Error",
+          description: "Failed to load ffmpeg. Please try again.",
+          variant: "destructive",
+          action: <ToastAction altText="Try again Reload">Try again Reload</ToastAction>,
+        });
+      });
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,6 +57,12 @@ export default function App() {
     if (file) {
       if (!file.type.startsWith("video/")) {
         setError("Please select a valid video file.");
+        toast({
+          title: "Invalid file type",
+          description: "Please select a valid video file.",
+          variant: "destructive",
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
         return;
       }
 
@@ -68,7 +87,7 @@ export default function App() {
 
 
   return (
-    <>
+    <Layout>
       {isLoaded ? (
         <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-pink-500 to-rose-500">
           <h1 className="text-4xl font-bold text-white text-center">
@@ -116,13 +135,13 @@ export default function App() {
             <TrimmedVideo
               trimmedVideoUrl={trimmedVideoUrl}
               setTrimmedVideoUrl={setTrimmedVideoUrl}
-              
+
             />
           )}
         </div>
       ) : (
         <Loading />
       )}
-    </>
+    </Layout>
   );
 }

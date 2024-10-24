@@ -1,3 +1,4 @@
+import { useToast } from "@/hooks/use-toast";
 
 
 interface TrimmedVideoProps {
@@ -6,6 +7,7 @@ interface TrimmedVideoProps {
 }
 
 export default function TrimmedVideo({ trimmedVideoUrl, setTrimmedVideoUrl }: TrimmedVideoProps) {
+    const { toast } = useToast()
     return (
         <div className="mt-6">
             <h2 className="text-white font-bold">Trimmed Video:</h2>
@@ -17,7 +19,13 @@ export default function TrimmedVideo({ trimmedVideoUrl, setTrimmedVideoUrl }: Tr
                 >
                     Go back
                 </button>
-                <a
+                <a 
+                    onClick={() => {
+                        toast({
+                            title: "Downloading...",
+                            description: "Downloading the trimmed video.",
+                        });
+                    }}
                     href={trimmedVideoUrl ?? undefined}
                     download={trimmedVideoUrl ?? undefined}
                     className="bg-green-500 text-white px-4 py-2 rounded-md mt-2"

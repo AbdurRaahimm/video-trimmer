@@ -2,6 +2,8 @@ import React, { FC, useEffect, useState } from 'react';
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Play, Pause } from "lucide-react";
 import { convertToHHMMSS } from '../lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 interface DisplayVideoProps {
     videoUrl: string;
@@ -34,6 +36,8 @@ const DisplayVideo: FC<DisplayVideoProps> = ({
 }) => {
     const [isTrimming, setIsTrimming] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    const { toast } = useToast()
 
     const handlePlayPause = () => {
         if (videoRef.current) {
@@ -76,10 +80,20 @@ const DisplayVideo: FC<DisplayVideoProps> = ({
                 const url = URL.createObjectURL(blob);
                 setTrimmedVideoUrl(url);
                 console.log("Video trimming successful!");
+                toast({
+                    title: "Success",
+                    description: "Video trimmed successfully!",
+                });
                 setErrorMessage(null);
             } catch (error) {
                 console.error("Error trimming video:", error);
                 setErrorMessage("Failed to trim the video. Please try again.");
+                toast({
+                    title: "Error",
+                    description: "Failed to trim the video. Please try again.",
+                    variant: "destructive",
+                    action: <ToastAction altText="Try again">Try again</ToastAction>,
+                });
             } finally {
                 setIsTrimming(false);
             }
