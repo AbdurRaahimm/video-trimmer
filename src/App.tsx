@@ -18,7 +18,7 @@ let ffmpeg: any;
 
 export default function App() {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [file] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
