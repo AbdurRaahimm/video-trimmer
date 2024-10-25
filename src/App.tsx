@@ -8,6 +8,7 @@ import TrimmedVideo from "./components/TrimmedVideo";
 import { ToastAction } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
+import Footer from "@/components/Footer";
 
 declare global {
   interface Window {
@@ -138,6 +139,7 @@ export default function App() {
 
             />
           )}
+          <Footer />
         </div>
       ) : (
         <Loading />
